@@ -1,0 +1,15 @@
+name: EternatumSkills
+version: '${project.version}'
+main: dev.eternatum.eternatumskills.Main
+api-version: 1.19
+authors: [ Batarian ]
+description: The skills portion of the EternatumRPG plugin
+website: Eternatum.net
+softdepend: [ProtocolLib]
+commands:
+  skills:
+    aliases: [skills, stats]
+    description: View your skills information
+  debugskills:
+    aliases: [debugskills, ds]
+    description: Debugging commands for skills
