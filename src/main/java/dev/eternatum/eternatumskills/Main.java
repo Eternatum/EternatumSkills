@@ -1,21 +1,30 @@
 package dev.eternatum.eternatumskills;
 
 import dev.eternatum.eternatumskills.combat.Combat;
+import dev.eternatum.eternatumskills.crafting.Alchemy;
 import dev.eternatum.eternatumskills.crafting.Metallurgy;
 import dev.eternatum.eternatumskills.debugging.DebugCommands;
+import dev.eternatum.eternatumskills.debugging.ItemUtils;
 import dev.eternatum.eternatumskills.gathering.Mining;
 import dev.eternatum.eternatumskills.listeners.LevelUpHandler;
 import dev.eternatum.eternatumskills.gathering.Woodcutting;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -43,6 +52,7 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
         getServer().getPluginManager().registerEvents(new Woodcutting(playerDataManager), this);
         getServer().getPluginManager().registerEvents(new Metallurgy(playerDataManager), this);
         getServer().getPluginManager().registerEvents(new Mining(playerDataManager, this), this);
+        getServer().getPluginManager().registerEvents(new Alchemy(playerDataManager, this), this);
 
         // Initialize the LevelUpHandler
         levelUpHandler = new LevelUpHandler(playerDataManager, this);
@@ -63,6 +73,10 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
         // Set the command executor
         getCommand("skills").setExecutor(this);
         getCommand("debugskills").setExecutor(new DebugCommands(playerDataManager));
+
+
+        // Assign mining type to default vanilla pickaxes
+        assignMiningTypeToPickaxes();
     }
 
     @Override
@@ -88,7 +102,43 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
             sender.sendMessage("This command can only be used by players.");
         }
 
+        // Check if the command is "/giveminingtool"
+        if (command.getName().equalsIgnoreCase("giveminingtool")) {
+            if (sender.hasPermission("yourplugin.giveminingtool")) {
+                // Create the mining tool
+                ItemStack miningTool = ItemUtils.createMiningTool(this, Material.DIAMOND_PICKAXE);
+
+                // Check if the player is online
+                if (sender instanceof Player) {
+                    Player player = (Player) sender;
+                    player.getInventory().addItem(miningTool);
+                    player.sendMessage("You have received the mining tool.");
+                }
+            } else {
+                sender.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            }
+        }
+
         return true;
+    }
+
+    public void assignMiningTypeToPickaxes() {
+        List<Material> pickaxeMaterials = ItemUtils.getPickaxeMaterials();
+        for (Material material : pickaxeMaterials) {
+            assignMiningType(material);
+        }
+    }
+
+    public void assignMiningType(Material pickaxeMaterial) {
+        ItemStack pickaxe = new ItemStack(pickaxeMaterial);
+
+        ItemMeta meta = pickaxe.getItemMeta();
+        PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+
+        NamespacedKey key = new NamespacedKey(this, "type");
+        dataContainer.set(key, PersistentDataType.STRING, "mining");
+
+        pickaxe.setItemMeta(meta);
     }
 
     private void sendSkillsInfo(Player player, PlayerData playerData) {
@@ -98,6 +148,8 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
         int metallurgyLevel = playerData.getMetallurgyLevel();
         int miningExp = playerData.getMiningExperience();
         int miningLevel = playerData.getMiningLevel();
+        int alchemyExp = playerData.getAlchemyExperience();
+        int alchemyLevel = playerData.getAlchemyLevel();
 
         //This will be displayed when the player runs /skills command
         player.sendMessage(ChatColor.DARK_GRAY + "----------");
@@ -108,6 +160,8 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
                 " (Exp: " + metallurgyExp + "/" + playerData.getExpRequiredForLevel(metallurgyLevel) + ")");
         player.sendMessage(ChatColor.GOLD + "Mining: Level " + miningLevel +
                 " (Exp: " + miningExp + "/" + playerData.getExpRequiredForLevel(miningLevel) + ")");
+        player.sendMessage(ChatColor.RED + "Alchemy: Level" + alchemyLevel +
+                " (Exp: " + alchemyExp + "/" + playerData.getExpRequiredForLevel(alchemyLevel) + ")");
         player.sendMessage(ChatColor.DARK_GRAY + "----------");
     }
 }

@@ -24,6 +24,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.plugin.Plugin;
+import dev.eternatum.eternatumskills.listeners.PersistentDataContainers;
 
 import java.util.UUID;
 
@@ -31,64 +32,57 @@ public class Mining implements Listener {
     private PlayerDataManager playerDataManager;
     private Plugin plugin;
 
+    // Experience values
+    private static final int IRON_EXP = 5;
+    private static final int COAL_EXP = 3;
+    private static final int GOLD_EXP = 12;
+    private static final int DIAMOND_EXP = 40;
 
     public Mining(PlayerDataManager playerDataManager, Plugin plugin) {
         this.playerDataManager = playerDataManager;
         this.plugin = plugin;
     }
 
-    // Experience values
-    int OBSIDIAN_EXP = 30;
-    int IRON_EXP = 5;
-    int COAL_EXP = 3;
-    int GOLD_EXP = 12;
-    int DIAMOND_EXP = 40;
-    int COPPER_EXP = 3;
-    int REDSTONE_EXP = 25;
-    int LAPIS_EXP = 25;
-
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
         Player player = event.getPlayer();
-        Location blockLocation = block.getLocation();
+        ItemStack tool = player.getInventory().getItemInMainHand();
+        NamespacedKey key = new NamespacedKey(plugin, "type");
+        ItemMeta meta = tool.getItemMeta();
+        PersistentDataContainer itemtype = meta.getPersistentDataContainer();
+        String materialId = tool.toString().toLowerCase();
+        boolean isMiningTool = tool.lore().contains("Mining") || materialId.contains("pickaxe");
 
-        ItemStack item = player.getInventory().getItemInMainHand();
-        ItemMeta meta = item.getItemMeta();
+        // Check if the tool type is "mining"
+        if (isMiningTool) {
+                // Calculate experience gained based on block type
+                int experience = 0;
+                ChatColor stoneColor = ChatColor.of("#FFFFFF");
+                switch (block.getType()) {
+                    case IRON_ORE:
+                    case DEEPSLATE_IRON_ORE:
+                        experience = IRON_EXP;
+                        stoneColor = ChatColor.of("#A19D94");
+                        break;
+                    case COAL_ORE:
+                    case DEEPSLATE_COAL_ORE:
+                        experience = COAL_EXP;
+                        stoneColor = ChatColor.of("#36454F");
+                        break;
+                    case GOLD_ORE:
+                    case DEEPSLATE_GOLD_ORE:
+                        experience = GOLD_EXP;
+                        stoneColor = ChatColor.of("#FFD700");
+                        break;
+                    case DIAMOND_ORE:
+                    case DEEPSLATE_DIAMOND_ORE:
+                        experience = DIAMOND_EXP;
+                        stoneColor = ChatColor.of("#B9F2FF");
+                        break;
+                }
 
-
-
-                    // Calculate experience gained based on block type
-                    int experience = 0;
-                    ChatColor stoneColor = ChatColor.of("#FFFFFF");
-                    String stoneTypeName = "";
-                    switch (block.getType()) {
-                        case IRON_ORE:
-                        case DEEPSLATE_IRON_ORE:
-                            experience = IRON_EXP;
-                            stoneColor = ChatColor.of("#A19D94");
-                            stoneTypeName = "Iron";
-                            break;
-                        case GOLD_ORE:
-                        case DEEPSLATE_GOLD_ORE:
-                            experience = GOLD_EXP;
-                            stoneColor = ChatColor.of("#FFD700");
-                            stoneTypeName = "Gold";
-                            break;
-                        case COAL_ORE:
-                        case DEEPSLATE_COAL_ORE:
-                            experience = COAL_EXP;
-                            stoneColor = ChatColor.of("#36454F");
-                            stoneTypeName = "Coal";
-                            break;
-                        case DIAMOND_ORE:
-                        case DEEPSLATE_DIAMOND_ORE:
-                            experience = DIAMOND_EXP;
-                            stoneColor = ChatColor.of("#B9F2FF");
-                            stoneTypeName = "Diamond";
-                            break;
-                    }
-
+                if (experience > 0) {
                     // Get the player's unique ID
                     UUID playerId = player.getUniqueId();
 
@@ -103,17 +97,18 @@ public class Mining implements Listener {
                     playerData.addMiningExperience(experience);
 
                     // Create and customize the armor stand for feedback
-                    ArmorStand armorStand = (ArmorStand) blockLocation.getWorld().spawnEntity(blockLocation, EntityType.ARMOR_STAND);
+                    ArmorStand armorStand = (ArmorStand) block.getLocation().getWorld().spawnEntity(block.getLocation().add(0.5, 1, 0.5), EntityType.ARMOR_STAND);
+                    armorStand.setMarker(true);
                     armorStand.setVisible(false);
                     armorStand.setGravity(false);
-                    armorStand.setCustomName(ChatColor.GOLD + "⛏ +" + stoneColor + experience);
+                    armorStand.setCustomName(ChatColor.GOLD + "⛏ +" + experience + " Mining XP");
                     armorStand.setCustomNameVisible(true);
 
                     // Remove the armor stand after 1 second
-                    Bukkit.getScheduler().runTaskLater(plugin, armorStand::remove, 60);
-
+                    plugin.getServer().getScheduler().runTaskLater(plugin, armorStand::remove, 20);
                 }
+            } else {
+                player.sendMessage("You do not have the required tool to break this block!");
             }
         }
     }
-}

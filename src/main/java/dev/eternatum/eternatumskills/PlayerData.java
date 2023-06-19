@@ -14,6 +14,8 @@ public class PlayerData {
     private int miningExperience;
     private int miningLevel;
     private int combatExperience;
+    private int alchemyExperience;
+    private int alchemyLevel;
     private Map<String, Integer> skillLevels;
 
     // Arbitrary experience table for leveling
@@ -29,6 +31,8 @@ public class PlayerData {
         this.miningExperience = 0;
         this.miningLevel = 1;
         this.combatExperience = 0;
+        this.alchemyExperience = 0;
+        this.alchemyLevel = 1;
         this.skillLevels = new HashMap<>();
     }
 
@@ -43,7 +47,10 @@ public class PlayerData {
 
     public enum SkillType {
         WOODCUTTING("Woodcutting"),
-        METALLURGY("Metallurgy");
+        METALLURGY("Metallurgy"),
+        MINING("Mining"),
+        COMBAT("Combat"),
+        ALCHEMY("Alchemy");
 
         private final String name;
 
@@ -59,7 +66,8 @@ public class PlayerData {
     public UUID getPlayerId() {
         return playerId;
     }
-//Experience Getters
+
+    // Experience Getters
     public int getTotalExperience() {
         return totalExperience;
     }
@@ -75,13 +83,15 @@ public class PlayerData {
     public int getMetallurgyExperience() {
         return metallurgyExperience;
     }
-    public int getMiningExperience() {
-        return miningExperience;
-    }
 
     public int getMetallurgyLevel() {
         return metallurgyLevel;
     }
+
+    public int getMiningExperience() {
+        return miningExperience;
+    }
+
     public int getMiningLevel() {
         return miningLevel;
     }
@@ -90,27 +100,17 @@ public class PlayerData {
         return combatExperience;
     }
 
-    public void setCombatExperience(int combatExperience) {
-        this.combatExperience = combatExperience;
+    public int getAlchemyExperience() {
+        return alchemyExperience;
     }
 
-    public void addCombatExperience(int experience) {
-        this.combatExperience += experience;
+    public int getAlchemyLevel() {
+        return alchemyLevel;
     }
 
     public void setTotalExperience(int totalExperience) {
         this.totalExperience = totalExperience;
     }
-
-    public void setMiningExperience(int miningExperience) {
-        this.miningExperience = miningExperience;
-        updateMiningLevel();
-    }
-    public void addMiningExperience(int experience) {
-        this.miningExperience += experience;
-        updateMiningLevel();
-    }
-
 
     public void setWoodcuttingExperience(int woodcuttingExperience) {
         this.woodcuttingExperience = woodcuttingExperience;
@@ -122,8 +122,17 @@ public class PlayerData {
         updateMetallurgyLevel();
     }
 
-    public void addExperience(int experience) {
-        this.totalExperience += experience;
+    public void setMiningExperience(int miningExperience) {
+        this.miningExperience = miningExperience;
+        updateMiningLevel();
+    }
+
+    public void setCombatExperience(int combatExperience) {
+        this.combatExperience = combatExperience;
+    }
+
+    public void setAlchemyExperience(int alchemyExperience) {
+        this.alchemyExperience = alchemyExperience;
     }
 
     public void addWoodcuttingExperience(int experience) {
@@ -134,6 +143,19 @@ public class PlayerData {
     public void addMetallurgyExperience(int experience) {
         this.metallurgyExperience += experience;
         updateMetallurgyLevel();
+    }
+
+    public void addMiningExperience(int experience) {
+        this.miningExperience += experience;
+        updateMiningLevel();
+    }
+
+    public void addCombatExperience(int experience) {
+        this.combatExperience += experience;
+    }
+
+    public void addAlchemyExperience(int experience) {
+        this.alchemyExperience += experience;
     }
 
     private void updateWoodcuttingLevel() {

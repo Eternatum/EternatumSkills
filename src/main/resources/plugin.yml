@@ -13,3 +13,5 @@ commands:
   debugskills:
     aliases: [debugskills, ds]
     description: Debugging commands for skills
+  giveminingtool:
+    description: Give the player a mining tool

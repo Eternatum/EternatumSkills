@@ -13,11 +13,13 @@ public class PersistentDataContainers {
 
     public void setCustomData() {
 
-        this.plugin = plugin;
+        // Create a NamespacedKey
         NamespacedKey key = new NamespacedKey(plugin, "itemtype");
+
         ItemStack item = new ItemStack(Material.DIAMOND_PICKAXE);
+        // ItemMeta implements PersistentDataHolder so we can get the PDC from it
         ItemMeta meta = item.getItemMeta();
-        meta.getPersistentDataContainer().set(key,PersistentDataType.STRING, "Mining");
+        meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, "mining");
         item.setItemMeta(meta);
 
     }
