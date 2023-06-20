@@ -1,0 +1,10 @@
+Potions:
+  water:
+    Name: Water Potion
+    Experience: 3.0
+  fire_resistance:
+    Name: Fire Resistance Potion
+    Experience: 1.5
+  speed:
+    Name: Speed Potion
+    Experience: 1.0

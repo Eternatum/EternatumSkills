@@ -8,6 +8,7 @@ import dev.eternatum.eternatumskills.debugging.ItemUtils;
 import dev.eternatum.eternatumskills.gathering.Mining;
 import dev.eternatum.eternatumskills.listeners.LevelUpHandler;
 import dev.eternatum.eternatumskills.gathering.Woodcutting;
+import dev.eternatum.eternatumskills.listeners.PersistentDataContainers;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -33,6 +34,7 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
     private LevelUpHandler levelUpHandler;
     private Combat combat;
     private Map<UUID, Integer> previousLevels;
+    private Player player;
 
     @Override
     public void onEnable() {
@@ -51,8 +53,6 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
         // Register the TreeChopListener with the PlayerDataManager instance
         getServer().getPluginManager().registerEvents(new Woodcutting(playerDataManager), this);
         getServer().getPluginManager().registerEvents(new Metallurgy(playerDataManager), this);
-        getServer().getPluginManager().registerEvents(new Mining(playerDataManager, this), this);
-        getServer().getPluginManager().registerEvents(new Alchemy(playerDataManager, this), this);
 
         // Initialize the LevelUpHandler
         levelUpHandler = new LevelUpHandler(playerDataManager, this);
@@ -74,10 +74,19 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
         getCommand("skills").setExecutor(this);
         getCommand("debugskills").setExecutor(new DebugCommands(playerDataManager));
 
-
         // Assign mining type to default vanilla pickaxes
         assignMiningTypeToPickaxes();
+
+        // Register the Mining class with the PlayerDataManager instance
+        UUID playerId = player.getUniqueId();
+        Player player = Bukkit.getPlayer(playerId);
+
+        // Check if the player is not null
+        if (player != null) {
+            getServer().getPluginManager().registerEvents(new Mining(this, new PersistentDataContainers(player), playerDataManager), this);
+        }
     }
+
 
     @Override
     public void onDisable() {
@@ -160,7 +169,7 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
                 " (Exp: " + metallurgyExp + "/" + playerData.getExpRequiredForLevel(metallurgyLevel) + ")");
         player.sendMessage(ChatColor.GOLD + "Mining: Level " + miningLevel +
                 " (Exp: " + miningExp + "/" + playerData.getExpRequiredForLevel(miningLevel) + ")");
-        player.sendMessage(ChatColor.RED + "Alchemy: Level" + alchemyLevel +
+        player.sendMessage(ChatColor.RED + "Alchemy: Level " + alchemyLevel +
                 " (Exp: " + alchemyExp + "/" + playerData.getExpRequiredForLevel(alchemyLevel) + ")");
         player.sendMessage(ChatColor.DARK_GRAY + "----------");
     }
