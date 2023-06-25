@@ -19,10 +19,9 @@ public class ItemUtils {
         // Set the display name of the item
         ItemMeta meta = miningTool.getItemMeta();
         meta.setDisplayName(ChatColor.GOLD + "Mining Pickaxe"); // Replace with the desired display name
-        miningTool.setItemMeta(meta);
 
         // Create a NamespacedKey for the persistent data
-        NamespacedKey key = new NamespacedKey(plugin, "type");
+        NamespacedKey key = new NamespacedKey(plugin, "itemtype");
 
         // Set the persistent data on the item's metadata
         PersistentDataContainer dataContainer = meta.getPersistentDataContainer();

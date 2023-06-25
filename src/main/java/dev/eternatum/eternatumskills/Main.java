@@ -6,9 +6,12 @@ import dev.eternatum.eternatumskills.crafting.Metallurgy;
 import dev.eternatum.eternatumskills.debugging.DebugCommands;
 import dev.eternatum.eternatumskills.debugging.ItemUtils;
 import dev.eternatum.eternatumskills.gathering.Mining;
-import dev.eternatum.eternatumskills.listeners.LevelUpHandler;
 import dev.eternatum.eternatumskills.gathering.Woodcutting;
+import dev.eternatum.eternatumskills.listeners.LevelUpHandler;
 import dev.eternatum.eternatumskills.listeners.PersistentDataContainers;
+import dev.eternatum.eternatumskills.listeners.TagAssigner;
+import dev.eternatum.eternatumskills.listeners.ArmorStands;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -32,12 +35,17 @@ import java.util.UUID;
 public class Main extends JavaPlugin implements CommandExecutor, Listener {
     private PlayerDataManager playerDataManager;
     private LevelUpHandler levelUpHandler;
+    private TagAssigner tagAssigner;
     private Combat combat;
     private Map<UUID, Integer> previousLevels;
     private Player player;
 
     @Override
     public void onEnable() {
+        // Console >:)
+        System.out.println("Eternatum Skills 0.1 initialized");
+        assignMiningTypeToPickaxes();
+
         // Instantiate the PlayerDataManager
         playerDataManager = new PlayerDataManager(getDataFolder());
 
@@ -50,9 +58,11 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
         // Register the Combat class as an event listener
         getServer().getPluginManager().registerEvents(combat, this);
 
-        // Register the TreeChopListener with the PlayerDataManager instance
-        getServer().getPluginManager().registerEvents(new Woodcutting(playerDataManager), this);
+        // Register the Woodcutting and Metallurgy listeners with the PlayerDataManager instance
+        getServer().getPluginManager().registerEvents(new Woodcutting(this, playerDataManager), this);
         getServer().getPluginManager().registerEvents(new Metallurgy(playerDataManager), this);
+        getServer().getPluginManager().registerEvents(new TagAssigner(this), this);
+        getServer().getPluginManager().registerEvents(new ArmorStands(this), this);
 
         // Initialize the LevelUpHandler
         levelUpHandler = new LevelUpHandler(playerDataManager, this);
@@ -63,13 +73,6 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
         // Initialize the previousLevels map
         previousLevels = new HashMap<>();
 
-        if (!Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays")) {
-            getLogger().severe("*** HolographicDisplays is not installed or not enabled. ***");
-            getLogger().severe("*** This plugin will be disabled. ***");
-            this.setEnabled(false);
-            return;
-        }
-
         // Set the command executor
         getCommand("skills").setExecutor(this);
         getCommand("debugskills").setExecutor(new DebugCommands(playerDataManager));
@@ -77,16 +80,9 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
         // Assign mining type to default vanilla pickaxes
         assignMiningTypeToPickaxes();
 
-        // Register the Mining class with the PlayerDataManager instance
-        UUID playerId = player.getUniqueId();
-        Player player = Bukkit.getPlayer(playerId);
-
-        // Check if the player is not null
-        if (player != null) {
-            getServer().getPluginManager().registerEvents(new Mining(this, new PersistentDataContainers(player), playerDataManager), this);
-        }
+        // Register the Mining listener
+        getServer().getPluginManager().registerEvents(new Mining(this, playerDataManager), this);
     }
-
 
     @Override
     public void onDisable() {
@@ -134,7 +130,15 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
     public void assignMiningTypeToPickaxes() {
         List<Material> pickaxeMaterials = ItemUtils.getPickaxeMaterials();
         for (Material material : pickaxeMaterials) {
-            assignMiningType(material);
+            ItemStack pickaxe = new ItemStack(material);
+
+            ItemMeta meta = pickaxe.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
+
+            NamespacedKey key = new NamespacedKey(this, "itemtype");
+            dataContainer.set(key, PersistentDataType.STRING, "mining");
+
+            pickaxe.setItemMeta(meta);
         }
     }
 
@@ -160,7 +164,7 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
         int alchemyExp = playerData.getAlchemyExperience();
         int alchemyLevel = playerData.getAlchemyLevel();
 
-        //This will be displayed when the player runs /skills command
+        // This will be displayed when the player runs the "/skills" command
         player.sendMessage(ChatColor.DARK_GRAY + "----------");
         player.sendMessage(ChatColor.DARK_GREEN + "Skill Experience:");
         player.sendMessage(ChatColor.GREEN + "Woodcutting: Level " + woodcuttingLevel +
