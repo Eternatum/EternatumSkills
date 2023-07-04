@@ -31,63 +31,9 @@ public class Woodcutting implements Listener {
     public static final int BIRCH_LOG_EXPERIENCE = 15;
     public static final int SPRUCE_LOG_EXPERIENCE = 20;
     public static final int ACACIA_LOG_EXPERIENCE = 20;
+    public static final int JUNGLE_LOG_EXPERIENCE = 25;
+    public static final int DARK_OAK_LOG_EXPERIENCE = 30;
 
-    @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
-        Block block = event.getBlock();
-        Player player = event.getPlayer();
-        ItemStack tool = player.getInventory().getItemInMainHand();
-        // Check if the broken block is a log
-        if (isWoodcuttingTool(tool)){
-            // Calculate experience gained based on log type
-            int experience = 0;
-            ChatColor logColor = ChatColor.WHITE;
-            String logTypeName = "";
-            switch (block.getType()) {
-                case OAK_LOG:
-                    experience = OAK_LOG_EXPERIENCE;
-                    logColor = ChatColor.AQUA;
-                    logTypeName = "Oak";
-                    break;
-                case BIRCH_LOG:
-                    experience = BIRCH_LOG_EXPERIENCE;
-                    logColor = ChatColor.YELLOW;
-                    logTypeName = "Birch";
-                    break;
-                case SPRUCE_LOG:
-                    experience = SPRUCE_LOG_EXPERIENCE;
-                    logColor = ChatColor.DARK_GREEN;
-                    logTypeName = "Spruce";
-                    break;
-                case ACACIA_LOG:
-                    experience = ACACIA_LOG_EXPERIENCE;
-                    logColor = ChatColor.RED;
-                    logTypeName = "Acacia";
-                    break;
-                // Add more cases for other log types
-            }
-
-            // Get the player's unique ID
-            UUID playerId = player.getUniqueId();
-
-            // Retrieve or create player data
-            PlayerData playerData = playerDataManager.getPlayerData(playerId);
-            if (playerData == null) {
-                playerData = new PlayerData(playerId);
-                playerDataManager.addPlayerData(playerData);
-            }
-
-            // Add experience to the player's data
-            playerData.addWoodcuttingExperience(experience);
-
-            // Perform any other desired operations (e.g., modify player's Minecraft experience)
-
-            // Send feedback to the player
-            player.sendMessage(ChatColor.GRAY + "[" + ChatColor.GREEN + "▥" + ChatColor.GRAY + "] " +
-                    ChatColor.WHITE + "You gained " + ChatColor.GREEN + experience + ChatColor.WHITE +
-                    " experience for chopping " + logColor + logTypeName + " logs" + ChatColor.WHITE + ".");
-        }
-    }
 
     private boolean isWoodcuttingTool(ItemStack item) {
         if (item != null && item.getType().name().endsWith("_AXE")) {

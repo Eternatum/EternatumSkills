@@ -1,16 +1,17 @@
 package dev.eternatum.eternatumskills;
 
-import dev.eternatum.eternatumskills.combat.Combat;
+import dev.eternatum.eternatumskills.commands.GivePickaxeCommand;
 import dev.eternatum.eternatumskills.crafting.Alchemy;
+import dev.eternatum.eternatumskills.crafting.Enchanting;
 import dev.eternatum.eternatumskills.crafting.Metallurgy;
 import dev.eternatum.eternatumskills.debugging.DebugCommands;
 import dev.eternatum.eternatumskills.debugging.ItemUtils;
 import dev.eternatum.eternatumskills.gathering.Mining;
 import dev.eternatum.eternatumskills.gathering.Woodcutting;
+import dev.eternatum.eternatumskills.listeners.ExperienceSources;
 import dev.eternatum.eternatumskills.listeners.LevelUpHandler;
-import dev.eternatum.eternatumskills.listeners.PersistentDataContainers;
 import dev.eternatum.eternatumskills.listeners.TagAssigner;
-import dev.eternatum.eternatumskills.listeners.ArmorStands;
+import dev.eternatum.eternatumskills.misc.ItemTypes;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -27,48 +28,58 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
 
-public class Main extends JavaPlugin implements CommandExecutor, Listener {
+public class Main extends JavaPlugin {
     private PlayerDataManager playerDataManager;
     private LevelUpHandler levelUpHandler;
-    private TagAssigner tagAssigner;
-    private Combat combat;
     private Map<UUID, Integer> previousLevels;
-    private Player player;
+
+    private ExperienceSources experienceSources;
 
     @Override
     public void onEnable() {
         // Console >:)
-        System.out.println("Eternatum Skills 0.1 initialized");
+        Logger.getLogger("Eternatum Skills 0.1 initialized");
         assignMiningTypeToPickaxes();
+
+        // Create .yml files if they do not exist in the plugin folder already
+        File configFile = new File(getDataFolder(), "ExperienceTypes.yml");
+        if (!configFile.exists()) {
+            saveResource("ExperienceTypes.yml", false);
+        }
+        ItemTypes.setPlugin(this);
 
         // Instantiate the PlayerDataManager
         playerDataManager = new PlayerDataManager(getDataFolder());
-
-        // Load player data
-        playerDataManager.loadData();
-
-        // Initialize the Combat class
-        combat = new Combat(this, playerDataManager);
-
-        // Register the Combat class as an event listener
-        getServer().getPluginManager().registerEvents(combat, this);
-
-        // Register the Woodcutting and Metallurgy listeners with the PlayerDataManager instance
-        getServer().getPluginManager().registerEvents(new Woodcutting(this, playerDataManager), this);
-        getServer().getPluginManager().registerEvents(new Metallurgy(playerDataManager), this);
-        getServer().getPluginManager().registerEvents(new TagAssigner(this), this);
-        getServer().getPluginManager().registerEvents(new ArmorStands(this), this);
 
         // Initialize the LevelUpHandler
         levelUpHandler = new LevelUpHandler(playerDataManager, this);
 
         // Register the LevelUpHandler as a listener
-        getServer().getPluginManager().registerEvents(levelUpHandler, this);
+        Bukkit.getPluginManager().registerEvents(levelUpHandler, this);
+
+        // Load player data
+        playerDataManager.loadData();
+
+        // Register the Woodcutting and Metallurgy listeners with the PlayerDataManager instance
+        getServer().getPluginManager().registerEvents(new Woodcutting(this, playerDataManager), this);
+        getServer().getPluginManager().registerEvents(new Metallurgy(playerDataManager), this);
+        getServer().getPluginManager().registerEvents(new TagAssigner(this), this);
+        getServer().getPluginManager().registerEvents(new Enchanting(), this);
+
+        // Create an instance of ExperienceSources and assign it to the field
+        experienceSources = new ExperienceSources(this, playerDataManager);
+
+        // Register the ExperienceSources listener
+        getServer().getPluginManager().registerEvents(experienceSources, this);
+
+        getCommand("givepickaxe").setExecutor(new GivePickaxeCommand(this));
 
         // Initialize the previousLevels map
         previousLevels = new HashMap<>();
@@ -76,9 +87,6 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
         // Set the command executor
         getCommand("skills").setExecutor(this);
         getCommand("debugskills").setExecutor(new DebugCommands(playerDataManager));
-
-        // Assign mining type to default vanilla pickaxes
-        assignMiningTypeToPickaxes();
 
         // Register the Mining listener
         getServer().getPluginManager().registerEvents(new Mining(this, playerDataManager), this);
@@ -140,18 +148,6 @@ public class Main extends JavaPlugin implements CommandExecutor, Listener {
 
             pickaxe.setItemMeta(meta);
         }
-    }
-
-    public void assignMiningType(Material pickaxeMaterial) {
-        ItemStack pickaxe = new ItemStack(pickaxeMaterial);
-
-        ItemMeta meta = pickaxe.getItemMeta();
-        PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
-
-        NamespacedKey key = new NamespacedKey(this, "type");
-        dataContainer.set(key, PersistentDataType.STRING, "mining");
-
-        pickaxe.setItemMeta(meta);
     }
 
     private void sendSkillsInfo(Player player, PlayerData playerData) {

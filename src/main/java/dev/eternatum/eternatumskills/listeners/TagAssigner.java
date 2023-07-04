@@ -24,8 +24,8 @@ public class TagAssigner implements Listener {
 
     public TagAssigner(Plugin plugin) {
         this.plugin = plugin;
-        this.miningKey = new NamespacedKey(plugin, "itemtype");
-        this.woodcuttingKey = new NamespacedKey(plugin, "itemtype");
+        this.miningKey = new NamespacedKey(plugin, "mining");
+        this.woodcuttingKey = new NamespacedKey(plugin, "woodcutting");
     }
 
     @EventHandler
@@ -111,14 +111,14 @@ public class TagAssigner implements Listener {
     private void setMiningTag(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
-        dataContainer.set(miningKey, PersistentDataType.STRING, "mining");
+        dataContainer.set(miningKey, PersistentDataType.STRING, "");
         item.setItemMeta(meta);
     }
 
     private void setWoodcuttingTag(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
-        dataContainer.set(woodcuttingKey, PersistentDataType.STRING, "woodcutting");
+        dataContainer.set(woodcuttingKey, PersistentDataType.STRING, "");
         item.setItemMeta(meta);
     }
 }

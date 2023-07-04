@@ -23,35 +23,32 @@ public class PersistentDataContainers {
     }
 
     public void setMining(ItemStack item) {
-    if (item.getType().name().endsWith("_PICKAXE")) {
-        ItemMeta meta = item.getItemMeta();
-        PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(plugin, "itemtype");
-
-        // Check if the pickaxe type is "mining" or "default"
-        String pickaxeType = dataContainer.get(key, PersistentDataType.STRING);
-        if (pickaxeType == null || !pickaxeType.equals("mining")) {
-            dataContainer.set(key, PersistentDataType.STRING, "mining");
-            item.setItemMeta(meta);
-        }
-    }
-}
-
-    public void setWoodcutting(ItemStack item){
-        if (item.getType().name().endsWith("_AXE")){
+        if (item.getType().name().endsWith("_PICKAXE")) {
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
-            NamespacedKey key = new NamespacedKey(plugin, "itemtype");
-            String axeType = dataContainer.get(key, PersistentDataType.STRING);
-            if(axeType == null || !axeType.equals("woodcutting")){
-                dataContainer.set(key, PersistentDataType.STRING, "woodcutting");
-            }
 
+            // Check if the pickaxe type is "mining" or "default"
+            String pickaxeType = dataContainer.get(key, PersistentDataType.STRING);
+            if (pickaxeType == null || !pickaxeType.equals("mining")) {
+                dataContainer.set(key, PersistentDataType.STRING, "mining");
+                item.setItemMeta(meta);
+            }
         }
     }
 
+    public void setWoodcutting(ItemStack item) {
+        if (item.getType().name().endsWith("_AXE")) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer dataContainer = meta.getPersistentDataContainer();
 
-
+            // Check if the axe type is "woodcutting" or "default"
+            String axeType = dataContainer.get(key, PersistentDataType.STRING);
+            if (axeType == null || !axeType.equals("woodcutting")) {
+                dataContainer.set(key, PersistentDataType.STRING, "woodcutting");
+                item.setItemMeta(meta);
+            }
+        }
+    }
 
     public String getCustomData(ItemStack itemStack) {
         ItemMeta itemMeta = itemStack.getItemMeta();

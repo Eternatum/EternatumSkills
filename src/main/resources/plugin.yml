@@ -15,3 +15,5 @@ commands:
     description: Debugging commands for skills
   giveminingtool:
     description: Give the player a mining tool
+  givepickaxe:
+    description: Give the player a pickaxe
